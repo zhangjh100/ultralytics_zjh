@@ -1,0 +1,21 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+# Carparts-seg dataset by Ultralytics
+# Documentation: https://docs.ultralytics.com/datasets/segment/carparts-seg/
+# Example usage: yolo train data=carparts-seg.yaml
+# parent
+# ├── ultralytics
+# └── datasets
+#     └── carparts-seg  ← downloads here (132 MB)
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path: /mnt/data1/zhangjh/ultralytics_zjh/datasets/acdc # dataset root dir
+train: train/images
+test: val/images
+val: val/images
+
+# Classes
+names:
+  0: LV
+  1: MYO
+  2: RV
