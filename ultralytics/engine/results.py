@@ -474,7 +474,7 @@ class Results(SimpleClass, DataExportMixin):
 
     def plot(
         self,
-        show_boxes=True,
+        show_boxes=False,
         conf: bool = True,
         line_width: float | None = None,
         font_size: float | None = None,
