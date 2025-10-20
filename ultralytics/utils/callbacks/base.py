@@ -95,10 +95,18 @@ def on_val_batch_end(validator):
     pass
 
 
+'''
 def on_val_end(validator):
     """Called when the validation ends."""
     pass
+'''
 
+# 在on_val_end回调中添加新指标日志
+def on_val_end(self, trainer):
+    seg_stats = trainer.validator.metrics
+    for k, v in seg_stats.items():
+        if k in ["iou", "acc", "dice", "recall"]:
+            trainer.logger.log_metrics({f"val/{k}": v}, step=trainer.epoch)
 
 # Predictor callbacks --------------------------------------------------------------------------------------------------
 

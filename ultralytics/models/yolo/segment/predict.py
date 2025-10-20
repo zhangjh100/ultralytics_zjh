@@ -63,8 +63,17 @@ class SegmentationPredictor(DetectionPredictor):
             >>> results = predictor.postprocess(preds, img, orig_img)
         """
         # Extract protos - tuple if PyTorch model or array if exported
+        '''
         protos = preds[1][-1] if isinstance(preds[1], tuple) else preds[1]
         return super().postprocess(preds[0], img, orig_imgs, protos=protos)
+        '''
+        results = self.construct_results(...)
+
+        # 输出结果时（如保存或显示）
+        for result in results:
+            if self.args.save or self.args.show:
+                result.plot(show_boxes=False)  # 禁用边界框
+        return results
 
     def construct_results(self, preds, img, orig_imgs, protos):
         """

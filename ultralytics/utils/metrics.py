@@ -1262,23 +1262,18 @@ class SegmentMetrics(DetMetrics):
         self.dice = []
         self.recall = []
 
-    def update(self, preds: torch.Tensor, targets: torch.Tensor):
-        """更新指标，preds和targets为二值化掩码（0/1）或类别掩码"""
-        # 计算IoU（复用mask_iou函数，需确保输入为二值掩码）
-        iou = mask_iou(preds.unsqueeze(0), targets.unsqueeze(0)).mean().item()
-        self.iou.append(iou)
+    def update(self, preds: torch.Tensor, targets: torch.Tensor, num_classes: int):
+        """多类别场景： preds.shape=(N, C, H, W), targets.shape=(N, H, W)（类别索引）"""
+        for c in range(num_classes):
+            # 生成当前类别的二值掩码
+            pred_mask = (preds[:, c] > 0.5).float()
+            true_mask = (targets == c).float()
 
-        # 计算准确率
-        acc = pixel_accuracy(preds, targets).item()
-        self.acc.append(acc)
-
-        # 计算Dice系数
-        dice = dice_score(preds, targets).item()
-        self.dice.append(dice)
-
-        # 计算召回率
-        recall = pixel_recall(preds, targets).item()
-        self.recall.append(recall)
+            # 计算单类别指标
+            self.iou.append(mask_iou(pred_mask.unsqueeze(0), true_mask.unsqueeze(0)).mean().item())
+            self.acc.append(pixel_accuracy(pred_mask, true_mask).item())
+            self.dice.append(dice_score(pred_mask, true_mask).item())
+            self.recall.append(pixel_recall(pred_mask, true_mask).item())
 
     def summarize(self):
         """汇总指标，返回平均值"""
