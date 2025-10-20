@@ -597,15 +597,15 @@ class Results(SimpleClass, DataExportMixin):
         '''
 
         # Plot Pose results
-        if self.keypoints is not None:
-            for i, k in enumerate(reversed(self.keypoints.data)):
-                annotator.kpts(
-                    k,
-                    self.orig_shape,
-                    radius=kpt_radius,
-                    kpt_line=kpt_line,
-                    kpt_color=colors(i, True) if color_mode == "instance" else None,
-                )
+        # if self.keypoints is not None:
+        #     for i, k in enumerate(reversed(self.keypoints.data)):
+        #         annotator.kpts(
+        #             k,
+        #             self.orig_shape,
+        #             radius=kpt_radius,
+        #             kpt_line=kpt_line,
+        #             kpt_color=colors(i, True) if color_mode == "instance" else None,
+        #         )
 
         # Show results
         if show:
