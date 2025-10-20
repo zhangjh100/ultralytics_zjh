@@ -474,7 +474,6 @@ class Results(SimpleClass, DataExportMixin):
 
     def plot(
         self,
-        show_boxes=False,
         conf: bool = True,
         line_width: float | None = None,
         font_size: float | None = None,
@@ -532,6 +531,7 @@ class Results(SimpleClass, DataExportMixin):
 
         names = self.names
         is_obb = self.obb is not None
+        show_boxes = False
         pred_boxes, show_boxes = self.obb if is_obb else self.boxes, boxes
         pred_masks, show_masks = self.masks, masks
         pred_probs, show_probs = self.probs, probs
