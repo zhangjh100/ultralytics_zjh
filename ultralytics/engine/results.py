@@ -486,7 +486,7 @@ class Results(SimpleClass, DataExportMixin):
         kpt_radius: int = 5,
         kpt_line: bool = True,
         labels: bool = True,
-        boxes: bool = True,
+        boxes: bool = False,
         masks: bool = True,
         probs: bool = True,
         show: bool = False,
