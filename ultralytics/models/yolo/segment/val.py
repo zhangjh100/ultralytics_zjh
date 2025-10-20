@@ -204,85 +204,54 @@ class SegmentationValidator(DetectionValidator):
     '''
 
     def _process_batch(self, preds: dict[str, torch.Tensor], batch: dict[str, Any]) -> dict[str, np.ndarray]:
-    """
-    扩展为多类别分割评估：按类别计算掩码IoU和TP。
-
-    Args:
-        preds (dict[str, torch.Tensor]): 预测结果，包含'cls'（类别）、'masks'（掩码，形状[N, C, H, W]）等。
-        batch (dict[str, Any]): 批次数据，包含'cls'（真实类别）、'masks'（真实掩码，形状[N, H, W]或[N, C, H, W]）等。
-
-    Returns:
-        dict[str, np.ndarray]: 包含每个类别的掩码TP矩阵（'tp_m_per_class'）及原始检测TP。
-    """
-    # 调用父类方法获取检测任务的TP（如边界框）
         tp = super()._process_batch(preds, batch)
         gt_cls = batch["cls"]  # 真实类别，形状[G]（G为该批次真实目标数）
         pred_cls = preds["cls"]  # 预测类别，形状[P]（P为该批次预测目标数）
         num_classes = self.nc  # 总类别数，从数据集中获取（self.data["nc"]）
 
-    # 初始化每个类别的TP矩阵（形状：[P, niou, C]，P=预测数，niou=IoU阈值数，C=类别数）
         tp_m_per_class = np.zeros((pred_cls.shape[0], self.niou, num_classes), dtype=bool)
 
-    # 处理无真实目标或无预测的情况
         if gt_cls.numel() == 0 or pred_cls.numel() == 0:
             tp.update({"tp_m_per_class": tp_m_per_class})
             return tp
 
-    # 多类别掩码处理：按类别遍历
         for c in range(num_classes):
-        # 1. 过滤当前类别的真实掩码和预测掩码
-        # 真实掩码：筛选出类别为c的样本（假设batch["masks"]是形状[G, H, W]的类别索引掩码）
             gt_mask_c = batch["masks"][gt_cls == c]  # 形状[G_c, H, W]，G_c为类别c的真实目标数
-        # 预测掩码：筛选出预测类别为c的样本，并二值化（假设preds["masks"]是形状[P, C, H, W]的概率图）
             pred_mask_c = preds["masks"][pred_cls == c, c]  # 形状[P_c, H, W]，P_c为类别c的预测数
             pred_mask_c = (pred_mask_c > 0.5).float()  # 二值化（阈值0.5）
 
-        # 2. 若当前类别无真实或预测，跳过
             if len(gt_mask_c) == 0 or len(pred_mask_c) == 0:
                 continue  # 该类别的TP保持初始0
 
-        # 3. 计算当前类别的掩码IoU（展平为向量后计算）
             iou = mask_iou(
                 gt_mask_c.flatten(1),  # 形状[G_c, H*W]
                 pred_mask_c.flatten(1)  # 形状[P_c, H*W]
             )  # 输出形状[P_c, G_c]（预测×真实的IoU矩阵）
 
-        # 4. 匹配当前类别的预测与真实目标，得到TP矩阵
-        # 构建当前类别的预测/真实类别标签（均为c）
             pred_cls_c = torch.full_like(pred_cls[pred_cls == c], c, dtype=torch.long)
             gt_cls_c = torch.full_like(gt_cls[gt_cls == c], c, dtype=torch.long)
-        # 调用匹配函数（复用现有match_predictions，确保类别一致）
             tp_m_c = self.match_predictions(pred_cls_c, gt_cls_c, iou).cpu().numpy()  # 形状[P_c, niou]
 
-        # 5. 将当前类别的TP结果填充到总矩阵中
-        # 找到预测类别为c的索引位置（在原始pred_cls中的位置）
             pred_indices_c = (pred_cls == c).nonzero().squeeze(1).cpu().numpy()
             tp_m_per_class[pred_indices_c, :, c] = tp_m_c  # 填充当前类别的TP
 
-    # 更新tp字典，添加每个类别的掩码TP
         tp.update({"tp_m_per_class": tp_m_per_class})
         return tp
 
     def plot_predictions(self, batch: dict[str, Any], preds: list[dict[str, torch.Tensor]], ni: int) -> None:
-        """
-        Plot batch predictions with masks and bounding boxes.
-
-        Args:
-            batch (dict[str, Any]): Batch containing images and annotations.
-            preds (list[dict[str, torch.Tensor]]): List of predictions from the model.
-            ni (int): Batch index.
-        """
         for p in preds:
-            # 保留掩膜，过滤边界框和类别信息（仅保留必要的掩膜数据）
+            # 保留掩膜并限制最大数量（如需）
             masks = p["masks"]
             if masks.shape[0] > self.args.max_det:
                 masks = masks[: self.args.max_det]  # 限制最大检测数量
-            p["masks"] = torch.as_tensor(masks, dtype=torch.uint8).cpu()
-            # 清空边界框和类别，避免绘制
-            p["bboxes"] = torch.zeros((0, 4), device=p["bboxes"].device)  # 空边界框
-            p["cls"] = torch.zeros((0,), device=p["cls"].device)
+            p["masks"] = torch.as_tensor(masks, dtype=torch.uint8).cpu()  # 确保掩膜格式正确
 
-        super().plot_predictions(batch, preds, ni, max_det=self.args.max_det)  # plot bboxes
+            # 清空边界框和类别数据，阻止绘制
+            p["bboxes"] = torch.zeros((0, 4), device=p["bboxes"].device)  # 空边界框（无数据可绘）
+            p["cls"] = torch.zeros((0,), device=p["cls"].device)  # 空类别（无标签可绘）
+
+        # 调用父类绘图方法，但此时已无边界框和类别数据，仅绘制掩膜
+        super().plot_predictions(batch, preds, ni, max_det=self.args.max_det)
 
     def save_one_txt(self, predn: torch.Tensor, save_conf: bool, shape: tuple[int, int], file: Path) -> None:
         """
