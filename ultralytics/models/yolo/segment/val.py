@@ -171,7 +171,7 @@ class SegmentationValidator(DetectionValidator):
         prepared_batch["masks"] = masks
         return prepared_batch
 
-'''
+    '''
     def _process_batch(self, preds: dict[str, torch.Tensor], batch: dict[str, Any]) -> dict[str, np.ndarray]:
         """
         Compute correct prediction matrix for a batch based on bounding boxes and optional masks.
@@ -201,7 +201,7 @@ class SegmentationValidator(DetectionValidator):
             tp_m = self.match_predictions(preds["cls"], gt_cls, iou).cpu().numpy()
         tp.update({"tp_m": tp_m})  # update tp with mask IoU
         return tp
-'''
+    '''
 
     def _process_batch(self, preds: dict[str, torch.Tensor], batch: dict[str, Any]) -> dict[str, np.ndarray]:
     """
@@ -273,10 +273,15 @@ class SegmentationValidator(DetectionValidator):
             ni (int): Batch index.
         """
         for p in preds:
+            # 保留掩膜，过滤边界框和类别信息（仅保留必要的掩膜数据）
             masks = p["masks"]
             if masks.shape[0] > self.args.max_det:
-                LOGGER.warning(f"Limiting validation plots to 'max_det={self.args.max_det}' items.")
-            p["masks"] = torch.as_tensor(masks[: self.args.max_det], dtype=torch.uint8).cpu()
+                masks = masks[: self.args.max_det]  # 限制最大检测数量
+            p["masks"] = torch.as_tensor(masks, dtype=torch.uint8).cpu()
+            # 清空边界框和类别，避免绘制
+            p["bboxes"] = torch.zeros((0, 4), device=p["bboxes"].device)  # 空边界框
+            p["cls"] = torch.zeros((0,), device=p["cls"].device)
+
         super().plot_predictions(batch, preds, ni, max_det=self.args.max_det)  # plot bboxes
 
     def save_one_txt(self, predn: torch.Tensor, save_conf: bool, shape: tuple[int, int], file: Path) -> None:
