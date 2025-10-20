@@ -564,7 +564,7 @@ class Results(SimpleClass, DataExportMixin):
             )
             annotator.masks(pred_masks.data, colors=[colors(x, True) for x in idx], im_gpu=im_gpu)
 
-'''
+        '''
         # Plot Detect results
         if pred_boxes is not None and show_boxes:
             for i, d in enumerate(reversed(pred_boxes)):
@@ -592,7 +592,7 @@ class Results(SimpleClass, DataExportMixin):
             text = "\n".join(f"{names[j] if names else j} {pred_probs.data[j]:.2f}" for j in pred_probs.top5)
             x = round(self.orig_shape[0] * 0.03)
             annotator.text([x, x], text, txt_color=txt_color, box_color=(64, 64, 64, 128))  # RGBA box
-'''
+        '''
 
         # Plot Pose results
         if self.keypoints is not None:
@@ -942,7 +942,8 @@ class Boxes(BaseTensor):
             >>> xyxy = boxes.xyxy
             >>> print(xyxy)
         """
-        return self.data[:, :4]
+        # return self.data[:, :4]
+        return None
 
     @property
     def conf(self) -> torch.Tensor | np.ndarray:
