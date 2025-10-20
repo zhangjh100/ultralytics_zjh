@@ -17,6 +17,21 @@ def test_func(*args):  # noqa
     """Test function callback for evaluating YOLO model performance metrics."""
     print("callback test passed")
 
+def test_segmentation_metrics():
+    # 生成随机二值掩码
+    pred = torch.randint(0, 2, (1, 256, 256)).float()
+    target = torch.randint(0, 2, (1, 256, 256)).float()
+
+    # 验证指标计算
+    iou = mask_iou(pred, target).mean().item()
+    acc = pixel_accuracy(pred, target).item()
+    dice = dice_score(pred, target).item()
+    recall = pixel_recall(pred, target).item()
+
+    assert 0 <= iou <= 1, "IoU计算错误"
+    assert 0 <= acc <= 1, "Accuracy计算错误"
+    assert 0 <= dice <= 1, "Dice计算错误"
+    assert 0 <= recall <= 1, "Recall计算错误"
 
 def test_export():
     """Test model exporting functionality by adding a callback and verifying its execution."""

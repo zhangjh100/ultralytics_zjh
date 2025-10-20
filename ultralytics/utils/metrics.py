@@ -20,6 +20,7 @@ OKS_SIGMA = (
 )
 
 
+
 def bbox_ioa(box1: np.ndarray, box2: np.ndarray, iou: bool = False, eps: float = 1e-7) -> np.ndarray:
     """
     Calculate the intersection over box2 area given box1 and box2.
@@ -165,6 +166,24 @@ def mask_iou(mask1: torch.Tensor, mask2: torch.Tensor, eps: float = 1e-7) -> tor
     union = (mask1.sum(1)[:, None] + mask2.sum(1)[None]) - intersection  # (area1 + area2) - intersection
     return intersection / (union + eps)
 
+def pixel_accuracy(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
+    """计算像素准确率（Accuracy）：正确分类的像素数 / 总像素数"""
+    correct = (pred == target).float().sum()
+    total = target.numel()  # 总像素数
+    return correct / (total + eps)
+
+
+def dice_score(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
+    """计算Dice系数：2*(交集) / (预测像素数 + 真实像素数)"""
+    intersection = (pred & target).float().sum()  # 二值化后计算交集
+    return (2.0 * intersection) / (pred.float().sum() + target.float().sum() + eps)
+
+
+def pixel_recall(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
+    """计算像素召回率（Recall）：真正例 / (真正例 + 假负例)"""
+    true_positive = (pred & target).float().sum()
+    actual_positive = target.float().sum()  # 真实前景像素数
+    return true_positive / (actual_positive + eps)
 
 def kpt_iou(
     kpt1: torch.Tensor, kpt2: torch.Tensor, area: torch.Tensor, sigma: list[float], eps: float = 1e-7
@@ -1200,7 +1219,7 @@ class DetMetrics(SimpleClass, DataExportMixin):
             for i in range(len(per_class["Box-P"]))
         ]
 
-
+...
 class SegmentMetrics(DetMetrics):
     """
     Calculate and aggregate detection and segmentation metrics over a given set of classes.
@@ -1238,6 +1257,37 @@ class SegmentMetrics(DetMetrics):
         self.seg = Metric()
         self.task = "segment"
         self.stats["tp_m"] = []  # add additional stats for masks
+        self.iou = []
+        self.acc = []
+        self.dice = []
+        self.recall = []
+
+    def update(self, preds: torch.Tensor, targets: torch.Tensor):
+        """更新指标，preds和targets为二值化掩码（0/1）或类别掩码"""
+        # 计算IoU（复用mask_iou函数，需确保输入为二值掩码）
+        iou = mask_iou(preds.unsqueeze(0), targets.unsqueeze(0)).mean().item()
+        self.iou.append(iou)
+
+        # 计算准确率
+        acc = pixel_accuracy(preds, targets).item()
+        self.acc.append(acc)
+
+        # 计算Dice系数
+        dice = dice_score(preds, targets).item()
+        self.dice.append(dice)
+
+        # 计算召回率
+        recall = pixel_recall(preds, targets).item()
+        self.recall.append(recall)
+
+    def summarize(self):
+        """汇总指标，返回平均值"""
+        return {
+            "iou": np.mean(self.iou),
+            "acc": np.mean(self.acc),
+            "dice": np.mean(self.dice),
+            "recall": np.mean(self.recall)
+        }
 
     def process(self, save_dir: Path = Path("."), plot: bool = False, on_plot=None) -> dict[str, np.ndarray]:
         """
@@ -1336,6 +1386,8 @@ class SegmentMetrics(DetMetrics):
         for i, s in enumerate(summary):
             s.update({**{k: round(v[i], decimals) for k, v in per_class.items()}})
         return summary
+
+
 
 
 class PoseMetrics(DetMetrics):

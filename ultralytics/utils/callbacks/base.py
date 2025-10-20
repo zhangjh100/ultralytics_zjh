@@ -140,6 +140,20 @@ def on_export_end(exporter):
     """Called when the model export ends."""
     pass
 
+class BaseCallback:
+    def on_val_end(self, trainer):
+        # 现有代码：记录检测/分类等指标
+        for k, v in trainer.validator.metrics.items():
+            if k.startswith("metrics/"):
+                trainer.logger.log_metrics({k: v}, step=trainer.epoch)
+
+        # 👇 添加：记录分割新指标
+        seg_keys = ["iou", "acc", "dice", "recall"]
+        for k in seg_keys:
+            if k in trainer.validator.metrics:
+                trainer.logger.log_metrics({f"val/seg_{k}": trainer.validator.metrics[k]}, step=trainer.epoch)
+
+
 
 default_callbacks = {
     # Run in trainer
@@ -161,7 +175,8 @@ default_callbacks = {
     "on_val_start": [on_val_start],
     "on_val_batch_start": [on_val_batch_start],
     "on_val_batch_end": [on_val_batch_end],
-    "on_val_end": [on_val_end],
+    "on_val_end": [on_val_end, BaseCallback().on_val_end],
+    # "on_val_end": [on_val_end],
     # Run in predictor
     "on_predict_start": [on_predict_start],
     "on_predict_batch_start": [on_predict_batch_start],
