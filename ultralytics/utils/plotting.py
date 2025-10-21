@@ -319,7 +319,10 @@ class Annotator:
         """
         txt_color = self.get_txt_color(color, txt_color)
         if isinstance(box, torch.Tensor):
-            box = box.tolist()
+            pass
+        else:
+            pass
+            # box = box.tolist()
 
         multi_points = isinstance(box[0], list)  # multiple points with shape (n, 2)
         p1 = [int(b) for b in box[0]] if multi_points else (int(box[0]), int(box[1]))
