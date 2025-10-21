@@ -142,6 +142,7 @@ class SegmentationValidator(DetectionValidator):
                     device=pred["bboxes"].device,
                 )
             )
+        pred["bboxes"]=torch.zeros((0, 4), device=pred["bboxes"].device)
         return preds
 
     def _prepare_batch(self, si: int, batch: dict[str, Any]) -> dict[str, Any]:
@@ -246,7 +247,6 @@ class SegmentationValidator(DetectionValidator):
                 masks = masks[: self.args.max_det]  # 限制最大检测数量
             p["masks"] = torch.as_tensor(masks, dtype=torch.uint8).cpu()  # 确保掩膜格式正确
 
-            # 清空边界框和类别数据，阻止绘制
             p["bboxes"] = torch.zeros((0, 4), device=p["bboxes"].device)  # 空边界框（无数据可绘）
             p["cls"] = torch.zeros((0,), device=p["cls"].device)  # 空类别（无标签可绘）
 
