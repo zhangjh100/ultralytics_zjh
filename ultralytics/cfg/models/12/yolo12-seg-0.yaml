@@ -46,7 +46,7 @@ head:
   - [-1, 2, C3k2, [1024, True]] # 20 (P5/32-large)
 
   - [14, 1, CrissCrossAttention, [64]]
-  - [17, 1, CrissCrossAttention, [512]]
-  - [20, 1, CrissCrossAttention, [1024]]
+  - [17, 1, CrissCrossAttention, [128]]
+  - [20, 1, CrissCrossAttention, [256]]
 
   - [[14, 17, 20], 1, Segment, [nc, 32, 256]] # Detect(P3, P4, P5)
