@@ -31,15 +31,15 @@ backbone:
 head:
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
   - [[-1, 6], 1, Concat, [1]] # cat backbone P4
-  - [-1, 2, CrissCrossAttention, []] # 11
+  - [-1, 2, CrissCrossAttention, [512]] # 11
 
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
   - [[-1, 4], 1, Concat, [1]] # cat backbone P3
-  - [-1, 2, CrissCrossAttention, []] # 14
+  - [-1, 2, CrissCrossAttention, [256]] # 14
 
   - [-1, 1, Conv, [256, 3, 2]]
   - [[-1, 11], 1, Concat, [1]] # cat head P4
-  - [-1, 2, CrissCrossAttention, []] # 17
+  - [-1, 2, CrissCrossAttention, [512]] # 17
 
   - [-1, 1, Conv, [512, 3, 2]]
   - [[-1, 8], 1, Concat, [1]] # cat head P5
