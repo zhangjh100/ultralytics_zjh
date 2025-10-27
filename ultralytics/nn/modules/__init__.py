@@ -101,6 +101,7 @@ from .transformer import (
     TransformerEncoderLayer,
     TransformerLayer,
 )
+from ultralytics.nn.attention.CrissCrossAttention import CrissCrossAttention
 
 __all__ = (
     "Conv",
