@@ -59,6 +59,7 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    CrissCrossAttention,
 )
 from .conv import (
     CBAM,
@@ -101,7 +102,6 @@ from .transformer import (
     TransformerEncoderLayer,
     TransformerLayer,
 )
-from .block import CrissCrossAttention
 
 __all__ = (
     "Conv",
