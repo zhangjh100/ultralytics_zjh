@@ -2031,8 +2031,9 @@ class SAVPE(nn.Module):
 
         return F.normalize(aggregated.transpose(-2, -3).reshape(B, Q, -1), dim=-1, p=2)
 
-def INF(B, H, W):
-    return -torch.diag(torch.tensor(float("inf")).cuda().repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
+def INF(B, H, W, device):
+    return -torch.diag(torch.tensor(float("inf"), device=device).repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
+    # return -torch.diag(torch.tensor(float("inf")).cuda().repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
     # return -torch.diag(torch.tensor(float("inf")).repeat(H), 0).unsqueeze(0).repeat(B * W, 1, 1)
 
 class CrissCrossAttention(nn.Module):
@@ -2058,7 +2059,8 @@ class CrissCrossAttention(nn.Module):
         proj_value = self.value_conv(x)
         proj_value_H = proj_value.permute(0,3,1,2).contiguous().view(m_batchsize*width,-1,height)
         proj_value_W = proj_value.permute(0,2,1,3).contiguous().view(m_batchsize*height,-1,width)
-        energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width)).view(m_batchsize,width,height,height).permute(0,2,1,3)
+        device = x.device
+        energy_H = (torch.bmm(proj_query_H, proj_key_H)+self.INF(m_batchsize, height, width, device)).view(m_batchsize,width,height,height).permute(0,2,1,3)
         energy_W = torch.bmm(proj_query_W, proj_key_W).view(m_batchsize,height,width,width)
         concate = self.softmax(torch.cat([energy_H, energy_W], 3))
 
