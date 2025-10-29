@@ -54,8 +54,8 @@ def convert_single_to_3channel(input_dir, output_dir):
 
 # 使用示例
 if __name__ == "__main__":
-    input_directory = "/mnt/data1/zhangjh/ultralytics_zjh/datasets/acdc/val/images_1"  # 替换为你的输入文件夹路径
-    output_directory = "/mnt/data1/zhangjh/ultralytics_zjh/datasets/acdc/val/images_3"  # 替换为你的输出文件夹路径
+    input_directory = "/mnt/data1/zhangjh/ultralytics_zjh/datasets/acdc/val/labels_1"  # 替换为你的输入文件夹路径
+    output_directory = "/mnt/data1/zhangjh/ultralytics_zjh/datasets/acdc/val/labels_3"  # 替换为你的输出文件夹路径
 
     convert_single_to_3channel(input_directory, output_directory)
     print("图像处理完成！")
