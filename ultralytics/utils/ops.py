@@ -552,7 +552,8 @@ def process_mask(protos, masks_in, bboxes, shape, upsample: bool = False):
 
     width_ratio = mw / shape[1]
     height_ratio = mh / shape[0]
-    ratios = torch.tensor([[width_ratio, height_ratio, width_ratio, height_ratio]], device=bboxes.device)
+    # ratios = torch.Tensor([[width_ratio, height_ratio, width_ratio, height_ratio]], device=bboxes.device)
+    ratios = torch.Tensor([[width_ratio, height_ratio, width_ratio, height_ratio]]).to(bboxes.device)
 
     masks = crop_mask(masks, boxes=bboxes * ratios)  # CHW
     if upsample:
