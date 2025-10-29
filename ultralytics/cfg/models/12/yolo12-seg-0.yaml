@@ -43,6 +43,6 @@ head:
 
   - [-1, 1, Conv, [512, 3, 2]]
   - [[-1, 8], 1, Concat, [1]] # cat head P5
-  - [-1, 2, CrissCrossAttention, [1024]] # 20 (P5/32-large)
+  - [-1, 2, CrissCrossAttention, [384]] # 20 (P5/32-large)
 
   - [[14, 17, 20], 1, Segment, [nc, 32, 256]] # Detect(P3, P4, P5)
